@@ -1,0 +1,435 @@
+openapi: 3.0.3
+
+info:
+  title: AIChatServer API
+  version: 1.0.0
+  description: |
+    AIChatServer 的 HTTP 接口定义，可直接导入 Apifox。
+    先调用“创建会话”，再将返回的 sessionID 填入需要 session_id 的接口。
+
+servers:
+  - url: http://127.0.0.1:8080
+    description: 本地开发服务器
+
+tags:
+  - name: AIChatServer
+    description: AI 聊天服务器接口
+
+paths:
+  /api/session:
+    post:
+      tags: [AIChatServer]
+      summary: 创建会话
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+            examples:
+              deepseek:
+                summary: 使用 DeepSeek 创建会话
+                value:
+                  model: deepseek-chat
+              chatgpt:
+                summary: 使用 ChatGPT 代理创建会话
+                value:
+                  model: chatgpt
+              gemini:
+                summary: 使用 Gemini 创建会话
+                value:
+                  model: gemini
+              ollama:
+                summary: 使用本地 Ollama 创建会话
+                value:
+                  model: deepseek-r1:1.5b
+      responses:
+        '200':
+          description: 会话创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+              example:
+                success: true
+                sessionID: session-example-001
+                data:
+                  sessionID: session-example-001
+                  model: deepseek-chat
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/sessions:
+    get:
+      tags: [AIChatServer]
+      summary: 获取所有会话
+      operationId: listSessions
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+              example:
+                success: true
+                message: get session list success
+                data:
+                  - id: session-example-001
+                    model: deepseek-chat
+                    created_at: 1723000000
+                    updated_at: 1723000060
+                    message_count: 2
+                    first_user_message: 你好
+
+  /api/models:
+    get:
+      tags: [AIChatServer]
+      summary: 获取可用模型
+      operationId: listModels
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelListResponse'
+              example:
+                success: true
+                message: get model lists success
+                data:
+                  - name: deepseek-chat
+                    desc: DeepSeek 云端模型
+                  - name: gemini
+                    desc: Gemini 云端模型
+                  - name: deepseek-r1:1.5b
+                    desc: 本地部署的 DeepSeek R1 1.5B 推理模型
+
+  /api/session/{session_id}:
+    delete:
+      tags: [AIChatServer]
+      summary: 删除指定会话
+      operationId: deleteSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+              example:
+                success: true
+                message: delete session success
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+              example:
+                success: false
+                message: delete session failed, session not found
+
+  /api/session/{session_id}/history:
+    get:
+      tags: [AIChatServer]
+      summary: 获取会话历史消息
+      operationId: getSessionHistory
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+              example:
+                success: true
+                message: get history messages success
+                data:
+                  - id: message-example-001
+                    role: user
+                    content: 你好
+                    timestamp: 1723000000
+                  - id: message-example-002
+                    role: assistant
+                    content: 你好，请问有什么可以帮助你？
+                    timestamp: 1723000001
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+              example:
+                success: false
+                message: session not found
+
+  /api/message:
+    post:
+      tags: [AIChatServer]
+      summary: 发送消息（完整响应）
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+            example:
+              session_id: session-example-001
+              message: 请介绍一下你自己
+      responses:
+        '200':
+          description: 消息发送成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMessageResponse'
+              example:
+                success: true
+                message: send message success
+                data:
+                  session_id: session-example-001
+                  response: 我是一个 AI 助手。
+                  data:
+                    assistant_message: 我是一个 AI 助手。
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/message/async:
+    post:
+      tags: [AIChatServer]
+      summary: 发送消息（SSE 流式响应）
+      operationId: sendMessageStream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+            example:
+              session_id: session-example-001
+              message: 请用一句话介绍 C++
+      responses:
+        '200':
+          description: 'SSE 流式响应；每个数据块以 data 开头，结束时返回 data: [DONE]'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-cache
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                data: "C++"
+
+                data: "是一门高性能编程语言。"
+
+                data: [DONE]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      description: 创建会话接口返回的 sessionID
+      schema:
+        type: string
+      example: session-example-001
+
+  responses:
+    BadRequest:
+      description: 请求参数或 JSON 格式错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicResponse'
+          example:
+            success: false
+            message: parse request body failed, json format error
+    InternalError:
+      description: 服务器处理失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicResponse'
+          example:
+            success: false
+            message: server processing failed
+
+  schemas:
+    BasicResponse:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: operation success
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: 模型名称；不提供时服务器默认使用 deepseek-chat
+          default: deepseek-chat
+          enum:
+            - deepseek-chat
+            - chatgpt
+            - gemini
+            - deepseek-r1:1.5b
+
+    CreateSessionResponse:
+      type: object
+      required: [success, sessionID, data]
+      properties:
+        success:
+          type: boolean
+        sessionID:
+          type: string
+        data:
+          type: object
+          required: [sessionID, model]
+          properties:
+            sessionID:
+              type: string
+            model:
+              type: string
+
+    SessionSummary:
+      type: object
+      required: [id, model, created_at, updated_at, message_count]
+      properties:
+        id:
+          type: string
+        model:
+          type: string
+        created_at:
+          type: integer
+          format: int64
+          description: Unix 时间戳
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix 时间戳
+        message_count:
+          type: integer
+          format: int64
+          minimum: 0
+        first_user_message:
+          type: string
+
+    SessionListResponse:
+      type: object
+      required: [success, message, data]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+
+    ModelInfo:
+      type: object
+      required: [name, desc]
+      properties:
+        name:
+          type: string
+        desc:
+          type: string
+
+    ModelListResponse:
+      type: object
+      required: [success, message, data]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelInfo'
+
+    ChatMessage:
+      type: object
+      required: [id, role, content, timestamp]
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix 时间戳
+
+    HistoryResponse:
+      type: object
+      required: [success, message, data]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+
+    SendMessageRequest:
+      type: object
+      required: [session_id, message]
+      properties:
+        session_id:
+          type: string
+          description: 创建会话接口返回的 sessionID
+        message:
+          type: string
+          minLength: 1
+
+    SendMessageResponse:
+      type: object
+      required: [success, message, data]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          required: [session_id, response, data]
+          properties:
+            session_id:
+              type: string
+            response:
+              type: string
+            data:
+              type: object
+              required: [assistant_message]
+              properties:
+                assistant_message:
+                  type: string

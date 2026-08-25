@@ -1,0 +1,39 @@
+BasedOnStyle: LLVM
+
+# 缩进
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# 列宽
+ColumnLimit: 120
+
+# 对齐
+AlignAfterOpenBracket: BlockIndent   # 需 clang-format >= 14, 老版本请回退为 AlwaysBreak
+AlignEscapedNewlines: DontAlign
+AlignTrailingComments: true
+AccessModifierOffset: -4
+
+# include 排序(保留空行分块, 块内大小写敏感排序)
+IncludeBlocks: Preserve
+SortIncludes: CaseSensitive
+
+# 命名空间
+NamespaceIndentation: None
+
+# 指针/引用左贴
+PointerAlignment: Left
+DerivePointerAlignment: false
+
+# 参数/实参不打包, 偏垂直可读性
+BinPackParameters: false
+BinPackArguments: false
+
+# 大括号贴上一行(K&R 风格)
+BreakBeforeBraces: Attach
+
+# 短语句控制
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

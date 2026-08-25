@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AIChat 本地智能聊天助手">
+    <meta name="theme-color" content="#101923">
+    <title>AI聊天助手</title>
+    <link rel="icon" href="/assets/aichat-mark.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/app.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">跳到聊天内容</a>
+
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar" aria-label="历史会话">
+            <div class="brand-row">
+                <a class="brand" href="/" aria-label="AI聊天助手首页">
+                    <img class="brand-mark" src="/assets/aichat-mark.svg" alt="">
+                    <span class="brand-name">AI聊天助手</span>
+                </a>
+                <button class="new-chat-button new-chat-button--compact" type="button" data-action="new-chat">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>新建对话</span>
+                </button>
+            </div>
+
+            <div class="sidebar-heading">
+                <div>
+                    <span class="eyebrow">CONVERSATIONS</span>
+                    <h2>历史会话</h2>
+                </div>
+                <span class="session-count" id="session-count" aria-label="会话数量">0</span>
+            </div>
+
+            <div class="session-list" id="session-list" role="list" aria-live="polite">
+                <div class="session-skeleton" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="session-skeleton" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="service-state" id="service-state" role="status">
+                    <span class="service-dot"></span>
+                    <span id="service-state-text">正在连接本地服务</span>
+                </div>
+                <span class="server-address">127.0.0.1:8080</span>
+            </div>
+        </aside>
+
+        <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="关闭会话侧栏"></button>
+
+        <main class="workspace" id="main-content">
+            <header class="workspace-header">
+                <button class="icon-button mobile-menu-button" id="mobile-menu-button" type="button" aria-label="打开会话侧栏">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                </button>
+                <div class="current-session-heading">
+                    <span class="current-session-title" id="current-session-title">新的探索</span>
+                    <span class="current-model-badge" id="current-model-badge" hidden></span>
+                </div>
+                <div class="header-brand-mobile">
+                    <img src="/assets/aichat-mark.svg" alt="">
+                    <span>AIChat</span>
+                </div>
+            </header>
+
+            <section class="welcome-view" id="welcome-view" aria-labelledby="welcome-title">
+                <div class="welcome-visual" aria-hidden="true">
+                    <img src="/assets/conversation-orbit.svg" alt="">
+                </div>
+                <p class="welcome-kicker">LOCAL AI WORKSPACE</p>
+                <h1 id="welcome-title">让每一次提问，都抵达更清晰的答案</h1>
+                <p class="welcome-copy">选择一个历史对话继续，或创建新的对话，开启您的AI之旅</p>
+                <button class="new-chat-button new-chat-button--hero" type="button" data-action="new-chat">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>新建对话</span>
+                </button>
+                <div class="welcome-footnote">
+                    <span></span>
+                    <p>模型运行状态与服务端保持实时同步</p>
+                    <span></span>
+                </div>
+            </section>
+
+            <section class="chat-view" id="chat-view" hidden aria-label="聊天区域">
+                <div class="messages-viewport" id="messages-viewport">
+                    <div class="messages" id="messages" aria-live="polite" aria-relevant="additions text"></div>
+                </div>
+
+                <div class="composer-zone">
+                    <form class="composer" id="message-form">
+                        <label class="sr-only" for="message-input">输入消息</label>
+                        <textarea
+                            id="message-input"
+                            name="message"
+                            rows="1"
+                            maxlength="2000"
+                            placeholder="请输入您的消息...(Enter发送，Shift+Enter换行)"
+                            autocomplete="off"
+                        ></textarea>
+                        <div class="composer-actions">
+                            <span class="character-count" id="character-count">0/2000</span>
+                            <button class="send-button" id="send-button" type="submit" aria-label="发送消息" disabled>
+                                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 14-7-4.8 14-3-5.8L5 12Z"/><path d="m11.2 13.2 3.1-3.1"/></svg>
+                            </button>
+                        </div>
+                    </form>
+                    <p class="composer-note">AI 生成的内容可能存在误差，请核实重要信息。</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <dialog class="model-dialog" id="model-dialog" aria-labelledby="model-dialog-title">
+        <form class="model-dialog-card" id="model-form" method="dialog">
+            <div class="dialog-header">
+                <div>
+                    <p class="eyebrow eyebrow--blue">CHOOSE A MODEL</p>
+                    <h2 id="model-dialog-title">选择本次对话的模型</h2>
+                    <p>不同模型擅长的任务有所不同，创建后本次会话将固定使用所选模型。</p>
+                </div>
+                <button class="icon-button dialog-close" type="button" data-action="close-model-dialog" aria-label="关闭模型选择">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="model-grid" id="model-grid" role="radiogroup" aria-label="可用模型">
+                <div class="model-loading" aria-live="polite">
+                    <span class="loading-ring"></span>
+                    <p>正在获取可用模型…</p>
+                </div>
+            </div>
+
+            <div class="dialog-actions">
+                <button class="secondary-button" type="button" data-action="close-model-dialog">取消</button>
+                <button class="primary-button" id="confirm-model-button" type="submit" disabled>确定并创建</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="assertive" aria-atomic="true"></div>
+
+    <template id="message-template">
+        <article class="message-row">
+            <div class="message-avatar" aria-hidden="true"></div>
+            <div class="message-stack">
+                <div class="message-meta">
+                    <span class="message-author"></span>
+                    <span class="streaming-status" hidden><i></i>正在生成</span>
+                </div>
+                <div class="message-content"></div>
+                <time class="message-time"></time>
+            </div>
+        </article>
+    </template>
+</body>
+</html>

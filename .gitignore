@@ -1,0 +1,38 @@
+# Build output
+/build/
+/build-*/
+/install/
+/out/
+
+# CMake
+CMakeUserPresets.json
+compile_commands.json
+
+# Runtime data
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# IDE and OS
+.idea/
+.vscode/
+.vs/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Nested build trees (the /build/ rule above only matches the repo root)
+build/
+build-*/
+CMakeFiles/
+Testing/
+
+# Local scratch: experiments, course notes, editor/tool metadata
+/scratch/
+.reasonix/
