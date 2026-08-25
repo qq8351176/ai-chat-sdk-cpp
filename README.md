@@ -228,8 +228,6 @@ cmake -S tests -B tests/build && cmake --build tests/build && ./tests/build/test
 ## Known limitations
 
 - Single process, no auth, no rate limiting — this is not a production gateway.
-- The Ollama provider registers under a hard-coded model name in
-  `ChatSDK::registerAllProvider`; it is not yet driven by `OllamaConfig::_modelName`.
 - The four provider tests in `tests/testLLM.cpp` are behind `#if 0`.
 - Source comments are in Chinese.
 

@@ -31,7 +31,8 @@ struct APIConfig : public Config {
 
 // 通过Ollama接入本地模型---不需要apikey
 struct OllamaConfig : public Config {
-    std::string _modelName; // 模型名称
+    // 模型名称沿用基类 Config::_modelName，不要在此重新声明，
+    // 否则会遮蔽基类成员，导致按 Config* 访问时读到空字符串。
     std::string _modelDesc; // 模型描述
     std::string _endpoint;  // 模型API endpoint  base url
 };

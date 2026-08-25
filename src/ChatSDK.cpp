@@ -40,15 +40,19 @@ void ChatSDK::registerAllProvider(const std::vector<std::shared_ptr<Config>>& co
         INFO("gemini-provider registed successed");
     }
 
-    if (!_llmManager.isModelAvailable("ollama")) {
-        for (const auto& config : configs) {
-            auto ollamaConfig = std::dynamic_pointer_cast<OllamaConfig>(config);
-            if (ollamaConfig) {
-                auto ollamaProvider = std::make_unique<ollamaLLMProvider>();
-                _llmManager.registerProvider("deepseek-r1:1.5b", std::move(ollamaProvider));
-                INFO("ollama-provider registed successed");
-            }
+    // Ollama 模型名来自配置，不能写死；否则换一个本地模型就会注册名与初始化名不一致，
+    // 导致该模型静默地不可用。
+    for (const auto& config : configs) {
+        auto ollamaConfig = std::dynamic_pointer_cast<OllamaConfig>(config);
+        if (!ollamaConfig || ollamaConfig->_modelName.empty()) {
+            continue;
         }
+        if (_llmManager.isModelAvailable(ollamaConfig->_modelName)) {
+            continue;
+        }
+        auto ollamaProvider = std::make_unique<ollamaLLMProvider>();
+        _llmManager.registerProvider(ollamaConfig->_modelName, std::move(ollamaProvider));
+        INFO("ollama-provider registed successed, modelName = {}", ollamaConfig->_modelName);
     }
 }
 
